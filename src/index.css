@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-teal: #0f3032;
+  --color-brand-gold: #d4af37;
+  --color-brand-mustard: #d4af37;
+  --color-brand-offwhite: #f8f9fa;
+  --font-sans: "Inter", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-brand-offwhite text-gray-800 font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .btn-teal {
+    @apply bg-brand-teal text-white px-6 py-2 rounded-md hover:bg-brand-teal/90 transition-all font-medium;
+  }
+  .btn-gold {
+    @apply bg-brand-gold text-brand-teal px-6 py-2 rounded-md hover:bg-brand-gold/90 transition-all font-bold;
+  }
+  .nav-link {
+    @apply text-gray-600 hover:text-brand-gold transition-colors font-medium;
+  }
+}
