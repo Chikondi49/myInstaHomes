@@ -110,6 +110,14 @@ const Admin = () => {
   });
   const [savingAbout, setSavingAbout] = useState(false);
 
+  const [founderInfo, setFounderInfo] = useState({
+    quote: "Our goal is to provide a seamless, comfortable experience that feels both welcoming and secure. Whether you're a solo traveller, a couple on a getaway, or a group of friends — Mai Insta Homes is your sanctuary.",
+    name: "Mr. Clement Ndiwo Banda",
+    title: "Founder",
+    imageUrl: ""
+  });
+  const [savingFounder, setSavingFounder] = useState(false);
+  const [founderFile, setFounderFile] = useState(null);
   // Fetch Existing Settings
   useEffect(() => {
     const fetchSettings = async () => {
@@ -128,6 +136,9 @@ const Admin = () => {
 
         const aboutDoc = await getDoc(doc(db, 'settings', 'about_info'));
         if (aboutDoc.exists()) setAboutInfo(aboutDoc.data());
+
+        const founderDoc = await getDoc(doc(db, 'settings', 'founder_info'));
+        if (founderDoc.exists()) setFounderInfo(founderDoc.data());
 
         const availabilityDoc = await getDoc(doc(db, 'settings', 'availability'));
         if (availabilityDoc.exists()) setBlockedDates(availabilityDoc.data().blocked || []);
@@ -209,6 +220,30 @@ const Admin = () => {
       showMessage('error', 'Failed to save contact info.');
     } finally {
       setSavingContact(false);
+    }
+  };
+
+  const handleSaveFounder = async (e) => {
+    e.preventDefault();
+    setSavingFounder(true);
+    let imageUrl = founderInfo.imageUrl;
+    try {
+      if (founderFile) {
+        const timestamp = Date.now();
+        const storageRef = ref(storage, `founder/${timestamp}_${founderFile.name}`);
+        const snapshot = await uploadBytes(storageRef, founderFile);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      }
+      const newFounderInfo = { ...founderInfo, imageUrl };
+      await setDoc(doc(db, 'settings', 'founder_info'), newFounderInfo);
+      setFounderInfo(newFounderInfo);
+      setFounderFile(null);
+      showMessage('success', 'Founder info updated successfully!');
+    } catch (error) {
+      console.error(error);
+      showMessage('error', 'Failed to save founder info.');
+    } finally {
+      setSavingFounder(false);
     }
   };
 
@@ -391,60 +426,21 @@ const Admin = () => {
               <p className="text-sm opacity-80 mt-1">Manage Application</p>
             </div>
             <div className="p-3 space-y-1">
-              <button 
-                onClick={() => setActiveTab('gallery')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'gallery' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <ImageIcon size={20} /> Gallery Manager
-              </button>
-              <button 
-                onClick={() => setActiveTab('featured')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'featured' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <Home size={20} /> Featured Properties
-              </button>
-              <button 
-                onClick={() => setActiveTab('contact')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'contact' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <Phone size={20} /> Contact & Footer
-              </button>
-              <button 
-                onClick={() => setActiveTab('hero')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'hero' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <LayoutTemplate size={20} /> Hero & Taglines
-              </button>
-              <button 
-                onClick={() => setActiveTab('pricing')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'pricing' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <CreditCard size={20} /> Pricing Manager
-              </button>
-              <button 
-                onClick={() => setActiveTab('about')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'about' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <FileText size={20} /> About Page Manager
-              </button>
-              <button 
-                onClick={() => setActiveTab('blog')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'blog' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <BookOpen size={20} /> Blog Manager
-              </button>
-              <button 
-                onClick={() => setActiveTab('availability')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'availability' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <Calendar size={20} /> Availability Manager
-              </button>
-              <button 
-                onClick={() => setActiveTab('bookings')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'bookings' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <ClipboardList size={20} /> Bookings Manager
-              </button>
+              <div className="px-4 py-2 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Operations & Reservations</div>
+              <button onClick={() => setActiveTab('bookings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'bookings' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><ClipboardList size={20} /> Bookings Desk</button>
+              <button onClick={() => setActiveTab('availability')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'availability' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><Calendar size={20} /> Availability Calendar</button>
+              <button onClick={() => setActiveTab('pricing')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'pricing' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><CreditCard size={20} /> Rates & Pricing</button>
+
+              <div className="px-4 py-2 mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Content & Branding</div>
+              <button onClick={() => setActiveTab('hero')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'hero' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><LayoutTemplate size={20} /> Hero & Home</button>
+              <button onClick={() => setActiveTab('about')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'about' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><FileText size={20} /> About Company</button>
+              <button onClick={() => setActiveTab('founder')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'founder' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><Info size={20} /> Founder Profile</button>
+              <button onClick={() => setActiveTab('contact')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'contact' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><Phone size={20} /> Contact & Footer</button>
+
+              <div className="px-4 py-2 mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Properties & Media</div>
+              <button onClick={() => setActiveTab('featured')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'featured' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><Home size={20} /> Featured Properties</button>
+              <button onClick={() => setActiveTab('gallery')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'gallery' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><ImageIcon size={20} /> Gallery Collection</button>
+              <button onClick={() => setActiveTab('blog')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'blog' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><BookOpen size={20} /> Blog Articles</button>
             </div>
             
             <div className="p-3 border-t border-gray-100">
@@ -869,6 +865,74 @@ const Admin = () => {
               <button onClick={handleSaveAvailability} disabled={savingAvailability} className="w-full bg-brand-gold text-white font-bold py-4 rounded-xl flex items-center justify-center disabled:opacity-70 shadow-lg">
                 {savingAvailability ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Apply Availability Changes'}
               </button>
+            </div>
+          )}
+
+          {/* TAB: FOUNDER */}
+          {activeTab === 'founder' && (
+            <div className="animate-in fade-in duration-300">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-brand-teal">Founder Profile Manager</h2>
+                <p className="text-gray-500">Update the founder photo and quote placed on the Home page.</p>
+              </div>
+
+              <form onSubmit={handleSaveFounder} className="space-y-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                  
+                  <div className="flex flex-col md:flex-row gap-6 items-center border-b border-gray-100 pb-6 mb-6">
+                    <div className="w-32 h-40 md:w-36 md:h-48 rounded-2xl border border-gray-200 overflow-hidden relative group shrink-0 bg-gray-50 flex items-center justify-center">
+                      {founderFile ? (
+                        <img src={URL.createObjectURL(founderFile)} alt="Preview" className="w-full h-full object-cover" />
+                      ) : founderInfo.imageUrl ? (
+                        <img src={founderInfo.imageUrl} alt="Current" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon size={40} className="text-gray-300" />
+                      )}
+                      
+                      <div className="absolute inset-0 bg-black/50 items-center justify-center hidden group-hover:flex transition-all cursor-pointer">
+                        <Upload className="text-white bg-white/20 p-2 rounded-full" size={36} />
+                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => setFounderFile(e.target.files[0])} />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Founder Image</p>
+                      <p className="text-xs text-gray-500 mb-2">Upload a high-quality, professional, rectangular portrait.</p>
+                      <label className="text-xs font-bold bg-brand-teal text-white px-3 py-1.5 rounded-lg cursor-pointer inline-block mt-2">
+                        Upload New Photo
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => setFounderFile(e.target.files[0])} />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Founder Name</label>
+                      <input type="text" value={founderInfo.name} onChange={(e) => setFounderInfo({...founderInfo, name: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-brand-teal" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Title</label>
+                      <input type="text" value={founderInfo.title} onChange={(e) => setFounderInfo({...founderInfo, title: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-brand-teal" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Quote</label>
+                    <textarea 
+                      rows="3" 
+                      value={founderInfo.quote} 
+                      onChange={(e) => setFounderInfo({...founderInfo, quote: e.target.value})} 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-brand-teal resize-none" 
+                    />
+                  </div>
+
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <button type="submit" disabled={savingFounder} className="bg-brand-gold text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center disabled:opacity-70 shadow-lg">
+                    {savingFounder ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Save Founder Profile'}
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
