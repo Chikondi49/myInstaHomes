@@ -7,39 +7,67 @@ import { doc, getDoc } from 'firebase/firestore';
 
 const Booking = () => {
   const [step, setStep] = useState(1);
+  const today = new Date().toISOString().split('T')[0];
+  const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     guests: '2',
-    checkIn: '2023-05-12',
-    checkOut: '2023-05-15',
+    checkIn: today,
+    checkOut: threeDaysLater,
     notes: ''
   });
   
   const [pricingInfo, setPricingInfo] = useState({
-    nightlyRate: 120,
-    serviceFee: 60,
-    occupancyTaxes: 30
+    nightlyRate: 150,
+    serviceFee: 50,
+    occupancyTaxes: 20
   });
 
+  const [blockedDates, setBlockedDates] = useState([]);
+  const [dateError, setDateError] = useState('');
+  const [nights, setNights] = useState(3);
+
   useEffect(() => {
-    const fetchPricing = async () => {
+    const fetchData = async () => {
       try {
-        const docRef = doc(db, 'settings', 'pricing_info');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setPricingInfo(docSnap.data());
-        }
+        const pricingSnap = await getDoc(doc(db, 'settings', 'pricing_info'));
+        if (pricingSnap.exists()) setPricingInfo(pricingSnap.data());
+
+        const availabilitySnap = await getDoc(doc(db, 'settings', 'availability'));
+        if (availabilitySnap.exists()) setBlockedDates(availabilitySnap.data().blocked || []);
       } catch (error) {
-        console.error("Error fetching pricing info: ", error);
+        console.error("Error fetching booking data: ", error);
       }
     };
-    fetchPricing();
+    fetchData();
   }, []);
 
-  const totalPrice = (pricingInfo.nightlyRate * 3) + pricingInfo.serviceFee + pricingInfo.occupancyTaxes;
+  useEffect(() => {
+    const start = new Date(formData.checkIn);
+    const end = new Date(formData.checkOut);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    setNights(diffDays > 0 ? diffDays : 1);
+
+    // Check availability
+    const isBlocked = blockedDates.some(range => {
+      const rangeStart = new Date(range.start);
+      const rangeEnd = new Date(range.end);
+      return (start <= rangeEnd && end >= rangeStart);
+    });
+
+    if (isBlocked) {
+      setDateError('Sorry, these dates are unavailable. Please select different dates.');
+    } else {
+      setDateError('');
+    }
+  }, [formData.checkIn, formData.checkOut, blockedDates]);
+
+  const totalPrice = (pricingInfo.nightlyRate * nights) + pricingInfo.serviceFee + pricingInfo.occupancyTaxes;
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
@@ -129,16 +157,20 @@ const Booking = () => {
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Check-In</label>
                       <input 
                         type="date" 
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all"
-                        defaultValue="2023-05-12"
+                        value={formData.checkIn}
+                        onChange={(e) => setFormData({...formData, checkIn: e.target.value})}
+                        min={today}
+                        className={`w-full bg-gray-50 border ${dateError ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-100'} rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all`}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Check-Out</label>
                       <input 
                         type="date" 
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all"
-                        defaultValue="2023-05-15"
+                        value={formData.checkOut}
+                        onChange={(e) => setFormData({...formData, checkOut: e.target.value})}
+                        min={formData.checkIn}
+                        className={`w-full bg-gray-50 border ${dateError ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-100'} rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all`}
                       />
                     </div>
                     <div className="space-y-2">
@@ -152,18 +184,17 @@ const Booking = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-8">
-                    <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Special Notes (Optional)</label>
-                    <textarea 
-                      rows="3"
-                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all resize-none"
-                      placeholder="Any specific requests?"
-                    ></textarea>
-                  </div>
+                  {dateError && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 font-bold text-sm flex items-center">
+                      <Info size={20} className="mr-3 shrink-0" />
+                      {dateError}
+                    </div>
+                  )}
 
                   <button 
                     onClick={nextStep}
-                    className="w-full btn-teal py-4 text-lg font-bold flex items-center justify-center group"
+                    disabled={!!dateError}
+                    className="w-full btn-teal py-4 text-lg font-bold flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Proceed to Payment
                     <ChevronRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
@@ -287,7 +318,7 @@ const Booking = () => {
                   </div>
                   <div className="flex justify-between text-sm py-2 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Duration</span>
-                    <span className="text-brand-teal font-bold">3 Nights</span>
+                    <span className="text-brand-teal font-bold">{nights} {nights === 1 ? 'Night' : 'Nights'}</span>
                   </div>
                   <div className="flex justify-between text-sm py-2 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Service Fee</span>

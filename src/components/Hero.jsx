@@ -30,6 +30,9 @@ const Hero = () => {
     fetchHero();
   }, []);
 
+  const today = new Date().toISOString().split('T')[0];
+  const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
   return (
     <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center pt-16">
       {/* Background Image with Overlay */}
@@ -67,7 +70,7 @@ const Hero = () => {
             <Calendar className="text-brand-teal" size={20} />
             <div className="flex flex-col flex-1">
               <label className="text-[10px] text-gray-500 uppercase font-bold">Check-In</label>
-              <input type="date" className="text-sm font-semibold outline-none w-full bg-transparent" defaultValue="2023-05-12" />
+              <input type="date" className="text-sm font-semibold outline-none w-full bg-transparent" defaultValue={today} />
             </div>
           </div>
 
@@ -76,7 +79,7 @@ const Hero = () => {
             <Calendar className="text-brand-teal" size={20} />
             <div className="flex flex-col flex-1">
               <label className="text-[10px] text-gray-500 uppercase font-bold">Check-Out</label>
-              <input type="date" className="text-sm font-semibold outline-none w-full bg-transparent" defaultValue="2023-08-17" />
+              <input type="date" className="text-sm font-semibold outline-none w-full bg-transparent" defaultValue={threeDaysLater} />
             </div>
           </div>
 

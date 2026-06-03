@@ -5,7 +5,7 @@ import { db, storage, auth } from '../firebase';
 import { collection, addDoc, doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { Upload, Image as ImageIcon, Loader2, Info, LayoutTemplate, Phone, BookOpen, CreditCard, LogOut, FileText, Home } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Info, LayoutTemplate, Phone, BookOpen, CreditCard, LogOut, FileText, Home, Calendar } from 'lucide-react';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -85,7 +85,10 @@ const Admin = () => {
   const [savingFeatured, setSavingFeatured] = useState(false);
   const [uploadingFeaturedIndex, setUploadingFeaturedIndex] = useState(null);
 
-  // About Info State
+  // Availability State
+  const [blockedDates, setBlockedDates] = useState([]);
+  const [newRange, setNewRange] = useState({ start: '', end: '', label: '' });
+  const [savingAvailability, setSavingAvailability] = useState(false);
   const [aboutInfo, setAboutInfo] = useState({
     aboutTitle: 'Luxury Meets Convenience',
     aboutDescription: 'Welcome to MAI Instahomes — your spacious four-bedroom retreat located within a secure compound of standalone homes in Lilongwe.\n\nGuests are treated to a fully equipped kitchen, a comfortable communal lounge, and 24-hour solar power backup. Each of our four elegant bedrooms features a king-size bed and a private en-suite bathroom with a hot shower, ensuring absolute privacy and comfort throughout your stay.',
@@ -120,6 +123,9 @@ const Admin = () => {
 
         const aboutDoc = await getDoc(doc(db, 'settings', 'about_info'));
         if (aboutDoc.exists()) setAboutInfo(aboutDoc.data());
+
+        const availabilityDoc = await getDoc(doc(db, 'settings', 'availability'));
+        if (availabilityDoc.exists()) setBlockedDates(availabilityDoc.data().blocked || []);
       } catch (error) {
         console.error("Error fetching settings: ", error);
       }
@@ -286,6 +292,31 @@ const Admin = () => {
     }
   };
 
+  const handleSaveAvailability = async (e) => {
+    if (e) e.preventDefault();
+    setSavingAvailability(true);
+    try {
+      await setDoc(doc(db, 'settings', 'availability'), { blocked: blockedDates });
+      showMessage('success', 'Calendar availability updated successfully!');
+    } catch (error) {
+      showMessage('error', 'Failed to save availability.');
+    } finally {
+      setSavingAvailability(false);
+    }
+  };
+
+  const addBlockedRange = () => {
+    if (!newRange.start || !newRange.end) return showMessage('error', 'Start and end dates are required.');
+    if (newRange.start > newRange.end) return showMessage('error', 'Start date must be before end date.');
+    
+    setBlockedDates([...blockedDates, { ...newRange, id: Date.now() }]);
+    setNewRange({ start: '', end: '', label: '' });
+  };
+
+  const removeBlockedRange = (id) => {
+    setBlockedDates(blockedDates.filter(range => range.id !== id));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
@@ -365,6 +396,12 @@ const Admin = () => {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'blog' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 <BookOpen size={20} /> Blog Manager
+              </button>
+              <button 
+                onClick={() => setActiveTab('availability')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'availability' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <Calendar size={20} /> Availability Manager
               </button>
             </div>
             
@@ -725,6 +762,71 @@ const Admin = () => {
                   {savingAbout ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Save About Page Content'}
                 </button>
               </form>
+            </div>
+          )}
+          {/* TAB: AVAILABILITY */}
+          {activeTab === 'availability' && (
+            <div className="animate-in fade-in duration-300">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-brand-teal">Availability Manager</h2>
+                <p className="text-gray-500">Block dates for private bookings, maintenance, or when the property is unavailable.</p>
+              </div>
+
+              <div className="bg-brand-teal/5 p-6 rounded-2xl border border-brand-teal/10 mb-8">
+                <h3 className="text-lg font-bold text-brand-teal mb-4">Add Blocked Date Range</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Start Date</label>
+                    <input type="date" value={newRange.start} onChange={(e) => setNewRange({...newRange, start: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-brand-teal" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">End Date</label>
+                    <input type="date" value={newRange.end} onChange={(e) => setNewRange({...newRange, end: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-brand-teal" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Label (Optional)</label>
+                    <input type="text" placeholder="e.g. Private Booking" value={newRange.label} onChange={(e) => setNewRange({...newRange, label: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-brand-teal" />
+                  </div>
+                </div>
+                <button onClick={addBlockedRange} className="mt-4 bg-brand-teal text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-90 transition-opacity">
+                  Add to List
+                </button>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <h3 className="text-lg font-bold text-gray-800">Currently Blocked Dates</h3>
+                {blockedDates.length === 0 ? (
+                  <p className="text-gray-400 italic">No dates currently blocked.</p>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {blockedDates.map((range) => (
+                      <div key={range.id} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-red-50 text-red-600 p-2 rounded-lg">
+                            <Calendar size={20} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">
+                              {new Date(range.start).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} — {new Date(range.end).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </p>
+                            {range.label && <p className="text-xs text-gray-500">{range.label}</p>}
+                          </div>
+                        </div>
+                        <button onClick={() => removeBlockedRange(range.id)} className="text-red-500 hover:text-red-700 font-bold text-sm px-3 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button onClick={handleSaveAvailability} disabled={savingAvailability} className="w-full bg-brand-gold text-white font-bold py-4 rounded-xl flex items-center justify-center disabled:opacity-70 shadow-lg">
+                {savingAvailability ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Apply Availability Changes'}
+              </button>
             </div>
           )}
 
