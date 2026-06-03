@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Users, CreditCard, ChevronRight, Info, CheckCircle2 } from 'lucide-react';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Booking = () => {
   const [step, setStep] = useState(1);
@@ -15,6 +17,29 @@ const Booking = () => {
     checkOut: '2023-05-15',
     notes: ''
   });
+  
+  const [pricingInfo, setPricingInfo] = useState({
+    nightlyRate: 120,
+    serviceFee: 60,
+    occupancyTaxes: 30
+  });
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'pricing_info');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setPricingInfo(docSnap.data());
+        }
+      } catch (error) {
+        console.error("Error fetching pricing info: ", error);
+      }
+    };
+    fetchPricing();
+  }, []);
+
+  const totalPrice = (pricingInfo.nightlyRate * 3) + pricingInfo.serviceFee + pricingInfo.occupancyTaxes;
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
@@ -206,7 +231,7 @@ const Booking = () => {
                       onClick={nextStep}
                       className="flex-[2] btn-teal py-4 text-lg font-bold"
                     >
-                      Process Payment ($450.00)
+                      Process Payment (${totalPrice.toFixed(2)})
                     </button>
                   </div>
                 </div>
@@ -228,7 +253,7 @@ const Booking = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Total Paid</span>
-                      <span className="text-brand-teal font-bold">$450.00</span>
+                      <span className="text-brand-teal font-bold">${totalPrice.toFixed(2)}</span>
                     </div>
                   </div>
                   <button 
@@ -249,7 +274,6 @@ const Booking = () => {
                     src="/hero.png" 
                     alt="Mai Insta Homes" 
                     className="w-full h-full object-cover"
-                    onError={(e) => e.target.src = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80"}
                   />
                 </div>
                 
@@ -259,7 +283,7 @@ const Booking = () => {
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between text-sm py-2 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Nightly Rate</span>
-                    <span className="text-brand-teal font-bold">$120.00</span>
+                    <span className="text-brand-teal font-bold">${pricingInfo.nightlyRate.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm py-2 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Duration</span>
@@ -267,17 +291,17 @@ const Booking = () => {
                   </div>
                   <div className="flex justify-between text-sm py-2 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Service Fee</span>
-                    <span className="text-brand-teal font-bold">$60.00</span>
+                    <span className="text-brand-teal font-bold">${pricingInfo.serviceFee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm py-2 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Occupancy Taxes</span>
-                    <span className="text-brand-teal font-bold">$30.00</span>
+                    <span className="text-brand-teal font-bold">${pricingInfo.occupancyTaxes.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="bg-brand-teal p-6 rounded-2xl flex justify-between items-center shadow-lg">
                   <span className="text-white/70 font-bold uppercase text-xs tracking-widest">Total Price</span>
-                  <span className="text-brand-gold text-2xl font-bold">$450.00</span>
+                  <span className="text-brand-gold text-2xl font-bold">${totalPrice.toFixed(2)}</span>
                 </div>
               </div>
             </div>

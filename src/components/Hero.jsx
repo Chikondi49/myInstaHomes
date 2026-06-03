@@ -33,10 +33,13 @@ const Hero = () => {
   return (
     <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center pt-16">
       {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: 'url("/hero.png"), url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80")' }}
-      >
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <img 
+          src="/hero.png" 
+          alt="Mai Insta Homes" 
+          fetchpriority="high"
+          className="w-full h-full object-cover"
+        />
         <div className="absolute inset-0 bg-brand-teal/40 mix-blend-multiply"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30"></div>
       </div>

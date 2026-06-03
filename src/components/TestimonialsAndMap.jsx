@@ -6,47 +6,17 @@ const TestimonialsAndMap = () => {
     <section className="flex flex-col lg:flex-row min-h-[400px]">
       {/* Left: Testimonials */}
       <div className="bg-brand-gold w-full lg:w-1/2 p-12 md:p-20 flex flex-col justify-center relative overflow-hidden">
-        <div className="absolute top-1/2 -left-4 -translate-y-1/2">
-          <button className="p-2 text-brand-teal/40 hover:text-brand-teal transition-colors">
-            <ChevronLeft size={48} strokeWidth={1} />
-          </button>
-        </div>
-        <div className="absolute top-1/2 -right-4 -translate-y-1/2">
-          <button className="p-2 text-brand-teal/40 hover:text-brand-teal transition-colors">
-            <ChevronRight size={48} strokeWidth={1} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 relative z-10">
-          {/* Review 1 */}
-          <div className="text-center">
-            <div className="flex justify-center space-x-1 mb-4 text-brand-teal">
-              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-            </div>
-            <p className="text-brand-teal text-sm italic font-medium leading-relaxed mb-6">
-              "I lorem ipsum dolor sit amet, moor consectetur adipiscing elit, suant irre..."
-            </p>
-            <h4 className="text-brand-teal font-bold uppercase tracking-widest text-xs">Tania Biehan</h4>
+        <div className="relative z-10 w-full max-w-xl mx-auto text-center">
+          <div className="flex justify-center space-x-1 mb-6 text-brand-teal">
+            {[...Array(5)].map((_, i) => <Star key={i} size={20} fill="currentColor" />)}
           </div>
-
-          {/* Review 2 */}
-          <div className="text-center">
-            <div className="flex justify-center space-x-1 mb-4 text-brand-teal">
-              {[...Array(5)].map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
-            </div>
-            <p className="text-brand-teal text-sm italic font-medium leading-relaxed mb-6">
-              "I lorem ipsum dolor sit amet, moor consectetur adipiscing elit, suant irre..."
-            </p>
-            <h4 className="text-brand-teal font-bold uppercase tracking-widest text-xs">Mith Darhami</h4>
+          <p className="text-brand-teal text-lg md:text-xl italic font-medium leading-relaxed mb-8">
+            "Our goal is to provide a seamless, comfortable experience that feels both welcoming and secure. Whether you're a solo traveller, a couple on a getaway, or a group of friends — Mai Insta Homes is your sanctuary."
+          </p>
+          <div className="flex flex-col items-center">
+            <h4 className="text-brand-teal font-bold uppercase tracking-widest text-sm mb-1">Mr. Clement Ndiwo Banda</h4>
+            <span className="text-brand-teal/70 text-xs font-semibold uppercase tracking-wider">Founder</span>
           </div>
-        </div>
-
-        {/* Dots */}
-        <div className="flex justify-center space-x-2 mt-12">
-          <div className="w-2 h-2 rounded-full bg-brand-teal/20"></div>
-          <div className="w-8 h-2 rounded-full bg-brand-teal uppercase"></div>
-          <div className="w-2 h-2 rounded-full bg-brand-teal/20"></div>
-          <div className="w-2 h-2 rounded-full bg-brand-teal/20"></div>
         </div>
       </div>
 

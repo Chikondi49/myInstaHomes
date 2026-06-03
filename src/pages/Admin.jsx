@@ -1,14 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { db, storage } from '../firebase';
+import { db, storage, auth } from '../firebase';
 import { collection, addDoc, doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Upload, Image as ImageIcon, Loader2, Info, LayoutTemplate, Phone, BookOpen } from 'lucide-react';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { Upload, Image as ImageIcon, Loader2, Info, LayoutTemplate, Phone, BookOpen, CreditCard, LogOut, FileText, Home } from 'lucide-react';
 
 const Admin = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('gallery');
   const [message, setMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+      setIsCheckingAuth(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // onAuthStateChanged will handle the rest
+    } catch (error) {
+      alert('Invalid email or password');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out', error);
+    }
+  };
 
   // Gallery State
   const [file, setFile] = useState(null);
@@ -28,11 +63,44 @@ const Admin = () => {
   });
   const [savingHero, setSavingHero] = useState(false);
 
+  // Pricing State
+  const [pricingInfo, setPricingInfo] = useState({
+    nightlyRate: 120, serviceFee: 60, occupancyTaxes: 30
+  });
+  const [savingPricing, setSavingPricing] = useState(false);
+
   // Blog State
   const [blogFile, setBlogFile] = useState(null);
   const [blogTitle, setBlogTitle] = useState('');
   const [blogContent, setBlogContent] = useState('');
   const [uploadingBlog, setUploadingBlog] = useState(false);
+
+  // Featured Properties State
+  const [featuredProperties, setFeaturedProperties] = useState([
+    { title: "Living Room/TV", description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.", image: "" },
+    { title: "Dining area", description: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.", image: "" },
+    { title: "Kitchen", description: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat.", image: "" },
+    { title: "Master Bedroom", description: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.", image: "" }
+  ]);
+  const [savingFeatured, setSavingFeatured] = useState(false);
+  const [uploadingFeaturedIndex, setUploadingFeaturedIndex] = useState(null);
+
+  // About Info State
+  const [aboutInfo, setAboutInfo] = useState({
+    aboutTitle: 'Luxury Meets Convenience',
+    aboutDescription: 'Welcome to MAI Instahomes — your spacious four-bedroom retreat located within a secure compound of standalone homes in Lilongwe.\n\nGuests are treated to a fully equipped kitchen, a comfortable communal lounge, and 24-hour solar power backup. Each of our four elegant bedrooms features a king-size bed and a private en-suite bathroom with a hot shower, ensuring absolute privacy and comfort throughout your stay.',
+    peaceTitle: 'Designed For Your Peace of Mind',
+    features: [
+      { title: "Solar Power", text: "Continuous power for lights, TV, and refrigeration through our dedicated backup systems." },
+      { title: "Gas Utilities", text: "A gas cooker is available as a reliable alternative when the main grid power fluctuates." },
+      { title: "Outdoor Living", text: "Guests are welcome to relax on the patio or enjoy our beautifully maintained outdoor garden." },
+      { title: "Secure Parking", text: "Ample, free parking is available directly on our guarded property." },
+      { title: "Maximum Security", text: "The entire perimeter is fully enclosed with a ClearVu electric fence." },
+      { title: "Prime Location", text: "Gateway Mall and Old Town Market are just a 10-minute drive away." }
+    ],
+    hostQuote: "My goal is to provide a seamless, comfortable experience that feels both welcoming and secure. Whether you're a solo traveller, a couple on a getaway, or a group of friends — Mai Insta Homes is your sanctuary."
+  });
+  const [savingAbout, setSavingAbout] = useState(false);
 
   // Fetch Existing Settings
   useEffect(() => {
@@ -43,6 +111,15 @@ const Admin = () => {
 
         const heroDoc = await getDoc(doc(db, 'settings', 'hero_info'));
         if (heroDoc.exists()) setHeroInfo(heroDoc.data());
+
+        const pricingDoc = await getDoc(doc(db, 'settings', 'pricing_info'));
+        if (pricingDoc.exists()) setPricingInfo(pricingDoc.data());
+
+        const featuredDoc = await getDoc(doc(db, 'settings', 'featured_properties'));
+        if (featuredDoc.exists()) setFeaturedProperties(featuredDoc.data().properties);
+
+        const aboutDoc = await getDoc(doc(db, 'settings', 'about_info'));
+        if (aboutDoc.exists()) setAboutInfo(aboutDoc.data());
       } catch (error) {
         console.error("Error fetching settings: ", error);
       }
@@ -106,6 +183,85 @@ const Admin = () => {
     }
   };
 
+  const handleFeaturedImageChange = async (index, file) => {
+    if (!file) return;
+    setUploadingFeaturedIndex(index);
+    showMessage('info', 'Uploading image...');
+    try {
+      const timestamp = Date.now();
+      const storageRef = ref(storage, `featured/${timestamp}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      const newProps = [...featuredProperties];
+      newProps[index].image = downloadURL;
+      setFeaturedProperties(newProps);
+      showMessage('success', 'Image uploaded successfully. Remember to click Save.');
+    } catch (error) {
+      showMessage('error', 'Failed to upload image.');
+    } finally {
+      setUploadingFeaturedIndex(null);
+    }
+  };
+
+  const handleSaveFeatured = async (e) => {
+    e.preventDefault();
+    setSavingFeatured(true);
+    try {
+      await setDoc(doc(db, 'settings', 'featured_properties'), { properties: featuredProperties });
+      showMessage('success', 'Featured properties saved successfully!');
+    } catch (error) {
+      showMessage('error', 'Failed to save properties.');
+    } finally {
+      setSavingFeatured(false);
+    }
+  };
+
+  const handleSaveAbout = async (e) => {
+    e.preventDefault();
+    setSavingAbout(true);
+    try {
+      await setDoc(doc(db, 'settings', 'about_info'), aboutInfo);
+      showMessage('success', 'About Page text updated successfully!');
+    } catch (error) {
+      showMessage('error', 'Failed to save about info.');
+    } finally {
+      setSavingAbout(false);
+    }
+  };
+
+  const handleHostImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    showMessage('info', 'Uploading host image...');
+    try {
+      const timestamp = Date.now();
+      const storageRef = ref(storage, `host/${timestamp}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setAboutInfo({ ...aboutInfo, hostImage: downloadURL });
+      showMessage('success', 'Host image uploaded successfully. Click Save to apply.');
+    } catch (error) {
+      showMessage('error', 'Failed to upload host image.');
+    }
+  };
+
+  const handleSavePricing = async (e) => {
+    e.preventDefault();
+    setSavingPricing(true);
+    try {
+      await setDoc(doc(db, 'settings', 'pricing_info'), {
+        nightlyRate: Number(pricingInfo.nightlyRate),
+        serviceFee: Number(pricingInfo.serviceFee),
+        occupancyTaxes: Number(pricingInfo.occupancyTaxes)
+      });
+      showMessage('success', 'Pricing updated successfully!');
+    } catch (error) {
+      showMessage('error', 'Failed to save pricing.');
+    } finally {
+      setSavingPricing(false);
+    }
+  };
+
   const handleUploadBlog = async (e) => {
     e.preventDefault();
     if (!blogFile) return showMessage('error', 'Please select an image for the blog post.');
@@ -135,7 +291,31 @@ const Admin = () => {
       <Navbar />
 
       <main className="flex-grow pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-8">
-        
+        {isCheckingAuth ? (
+          <div className="w-full flex justify-center items-center py-20">
+            <Loader2 className="animate-spin text-brand-gold h-10 w-10" />
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="w-full max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mt-10">
+            <h2 className="text-2xl font-bold text-brand-teal mb-6 text-center">Admin Access</h2>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="admin@maiinstahomes.com"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Access Code / Password</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" />
+              </div>
+              <button type="submit" className="w-full bg-brand-teal text-white font-bold py-3 rounded-xl hover:bg-opacity-90 transition-opacity">
+                Enter Portal
+              </button>
+            </form>
+          </div>
+        ) : (
+          <>
         {/* Sidebar */}
         <div className="w-full md:w-64 flex-shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-32">
@@ -151,6 +331,12 @@ const Admin = () => {
                 <ImageIcon size={20} /> Gallery Manager
               </button>
               <button 
+                onClick={() => setActiveTab('featured')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'featured' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <Home size={20} /> Featured Properties
+              </button>
+              <button 
                 onClick={() => setActiveTab('contact')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'contact' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
               >
@@ -163,10 +349,31 @@ const Admin = () => {
                 <LayoutTemplate size={20} /> Hero & Taglines
               </button>
               <button 
+                onClick={() => setActiveTab('pricing')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'pricing' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <CreditCard size={20} /> Pricing Manager
+              </button>
+              <button 
+                onClick={() => setActiveTab('about')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'about' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <FileText size={20} /> About Page Manager
+              </button>
+              <button 
                 onClick={() => setActiveTab('blog')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'blog' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 <BookOpen size={20} /> Blog Manager
+              </button>
+            </div>
+            
+            <div className="p-3 border-t border-gray-100">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut size={16} /> Sign Out
               </button>
             </div>
           </div>
@@ -218,6 +425,51 @@ const Admin = () => {
                 </div>
                 <button type="submit" disabled={uploading} className="w-full bg-brand-teal hover:bg-opacity-90 text-white font-bold py-4 rounded-xl flex items-center justify-center disabled:opacity-70">
                   {uploading ? <><Loader2 className="animate-spin mr-2" /> Uploading...</> : 'Upload to Gallery'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* TAB: FEATURED PROPERTIES */}
+          {activeTab === 'featured' && (
+            <div className="animate-in fade-in duration-300 mb-10">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-brand-teal">Featured Properties</h2>
+                <p className="text-gray-500">Edit the 4 featured properties shown on the homepage.</p>
+              </div>
+              <form onSubmit={handleSaveFeatured} className="space-y-6 max-w-4xl">
+                {featuredProperties.map((prop, index) => (
+                  <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6">
+                    <div className="md:w-1/3 flex flex-col gap-3">
+                       <img src={prop.image} alt={prop.title} className="w-full h-32 object-cover rounded-xl border border-gray-200" />
+                       <label className="text-sm font-bold text-brand-teal cursor-pointer hover:text-brand-gold transition-colors text-center bg-brand-offwhite py-2 rounded-lg border border-brand-teal/10 relative">
+                         {uploadingFeaturedIndex === index ? 'Uploading...' : 'Change Image'}
+                         <input type="file" className="sr-only" accept="image/*" onChange={(e) => handleFeaturedImageChange(index, e.target.files[0])} disabled={uploadingFeaturedIndex !== null} />
+                       </label>
+                    </div>
+                    <div className="md:w-2/3 space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Title</label>
+                        <input type="text" value={prop.title} onChange={(e) => {
+                          const newProps = [...featuredProperties];
+                          newProps[index].title = e.target.value;
+                          setFeaturedProperties(newProps);
+                        }} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" required />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Description</label>
+                        <textarea value={prop.description} onChange={(e) => {
+                          const newProps = [...featuredProperties];
+                          newProps[index].description = e.target.value;
+                          setFeaturedProperties(newProps);
+                        }} className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-brand-teal outline-none block" rows="3" required />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <button type="submit" disabled={savingFeatured || uploadingFeaturedIndex !== null} className="bg-brand-teal hover:bg-opacity-90 text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center w-full mt-4 text-lg transition-colors">
+                  {savingFeatured ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Save Featured Properties'}
                 </button>
               </form>
             </div>
@@ -297,6 +549,38 @@ const Admin = () => {
             </div>
           )}
 
+          {/* TAB: PRICING */}
+          {activeTab === 'pricing' && (
+            <div className="animate-in fade-in duration-300">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-brand-teal">Pricing Manager</h2>
+                <p className="text-gray-500">Edit the nightly rates and fees for your property.</p>
+              </div>
+              <form onSubmit={handleSavePricing} className="space-y-6 max-w-2xl">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Nightly Rate ($)</label>
+                  <input type="number" step="0.01" value={pricingInfo.nightlyRate} onChange={(e) => setPricingInfo({...pricingInfo, nightlyRate: e.target.value})}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" required />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Service Fee ($)</label>
+                    <input type="number" step="0.01" value={pricingInfo.serviceFee} onChange={(e) => setPricingInfo({...pricingInfo, serviceFee: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Occupancy Taxes ($)</label>
+                    <input type="number" step="0.01" value={pricingInfo.occupancyTaxes} onChange={(e) => setPricingInfo({...pricingInfo, occupancyTaxes: e.target.value})}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" required />
+                  </div>
+                </div>
+                <button type="submit" disabled={savingPricing} className="bg-brand-gold hover:bg-opacity-90 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center disabled:opacity-70 mt-4">
+                  {savingPricing ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Save Pricing'}
+                </button>
+              </form>
+            </div>
+          )}
+
           {/* TAB 4: BLOG MANAGER */}
           {activeTab === 'blog' && (
             <div className="animate-in fade-in duration-300">
@@ -335,7 +619,118 @@ const Admin = () => {
             </div>
           )}
 
+          {/* TAB 5: ABOUT MANAGER */}
+          {activeTab === 'about' && (
+            <div className="animate-in fade-in duration-300">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-brand-teal">About Page Content</h2>
+                <p className="text-gray-500">Edit the text sections displayed on the About page and Host profile.</p>
+              </div>
+              <form onSubmit={handleSaveAbout} className="space-y-6 max-w-3xl">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                  <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Main Introduction</h3>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Section Title</label>
+                    <input type="text" value={aboutInfo.aboutTitle || ''} onChange={(e) => setAboutInfo({...aboutInfo, aboutTitle: e.target.value})} 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none text-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Description (Press Enter for new paragraphs)</label>
+                    <textarea value={aboutInfo.aboutDescription || ''} onChange={(e) => setAboutInfo({...aboutInfo, aboutDescription: e.target.value})} rows="8"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" />
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                  <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Features Section</h3>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Section Title</label>
+                    <input type="text" value={aboutInfo.peaceTitle || ''} onChange={(e) => setAboutInfo({...aboutInfo, peaceTitle: e.target.value})} 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none text-lg" />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <label className="block text-sm font-bold text-gray-700">The 6 Features</label>
+                    {(aboutInfo.features || []).map((feature, index) => (
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <input 
+                          type="text" 
+                          placeholder="Short Title" 
+                          value={feature.title} 
+                          onChange={(e) => {
+                            const newFeatures = [...aboutInfo.features];
+                            newFeatures[index].title = e.target.value;
+                            setAboutInfo({...aboutInfo, features: newFeatures});
+                          }}
+                          className="px-3 py-2 border rounded-lg focus:border-brand-teal outline-none h-11"
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="Feature description text..." 
+                          value={feature.text} 
+                          onChange={(e) => {
+                            const newFeatures = [...aboutInfo.features];
+                            newFeatures[index].text = e.target.value;
+                            setAboutInfo({...aboutInfo, features: newFeatures});
+                          }}
+                          className="px-3 py-2 border rounded-lg focus:border-brand-teal outline-none h-11 w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+                  <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Host Profile</h3>
+                  
+                  <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div className="w-full md:w-1/3">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Host Image</label>
+                      <div className="relative rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 aspect-[4/5] group">
+                        {aboutInfo.hostImage ? (
+                          <img src={aboutInfo.hostImage} className="w-full h-full object-cover" alt="Host" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-400">
+                            <ImageIcon size={48} />
+                          </div>
+                        )}
+                        <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white cursor-pointer transition-opacity font-bold">
+                          Upload New Image
+                          <input type="file" className="sr-only" accept="image/*" onChange={handleHostImageUpload} />
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full md:w-2/3 space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Host Name</label>
+                        <input type="text" value={aboutInfo.hostName || ''} onChange={(e) => setAboutInfo({...aboutInfo, hostName: e.target.value})} 
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none font-bold" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Host Title / Subtitle</label>
+                        <input type="text" value={aboutInfo.hostTitle || ''} onChange={(e) => setAboutInfo({...aboutInfo, hostTitle: e.target.value})} 
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Host Message / Blockquote</label>
+                        <textarea value={aboutInfo.hostQuote || ''} onChange={(e) => setAboutInfo({...aboutInfo, hostQuote: e.target.value})} rows="4"
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-teal outline-none italic" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={savingAbout} className="bg-brand-gold hover:bg-opacity-90 text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center w-full disabled:opacity-70 mt-4 text-lg">
+                  {savingAbout ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Save About Page Content'}
+                </button>
+              </form>
+            </div>
+          )}
+
         </div>
+          </>
+        )}
       </main>
 
       <Footer />

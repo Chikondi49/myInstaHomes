@@ -1,13 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { ShieldCheck, Heart, User, MapPin, Sun, Car, Flame, Trees, Bed, Bath, Wifi, Zap, Lock, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Heart, MapPin, Sun, Car, Flame, Trees, Bed, Bath, Wifi, Zap, Lock, ShoppingBag, CheckCircle2, ChevronRight } from 'lucide-react';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const About = () => {
+  const [aboutInfo, setAboutInfo] = useState(() => {
+    const cached = localStorage.getItem('mai_about_cache');
+    return cached ? JSON.parse(cached) : {
+      aboutTitle: 'Luxury Meets Convenience',
+      aboutDescription: 'Welcome to MAI Instahomes — your spacious four-bedroom retreat located within a secure compound of standalone homes in Lilongwe.\n\nGuests are treated to a fully equipped kitchen, a comfortable communal lounge, and 24-hour solar power backup. Each of our four elegant bedrooms features a king-size bed and a private en-suite bathroom with a hot shower, ensuring absolute privacy and comfort throughout your stay.',
+      peaceTitle: 'Designed For Your Peace of Mind',
+      features: [
+        { title: "Solar Power", text: "Continuous power for lights, TV, and refrigeration through our dedicated backup systems." },
+        { title: "Gas Utilities", text: "A gas cooker is available as a reliable alternative when the main grid power fluctuates." },
+        { title: "Outdoor Living", text: "Guests are welcome to relax on the patio or enjoy our beautifully maintained outdoor garden." },
+        { title: "Secure Parking", text: "Ample, free parking is available directly on our guarded property." },
+        { title: "Maximum Security", text: "The entire perimeter is fully enclosed with a ClearVu electric fence." },
+        { title: "Prime Location", text: "Gateway Mall and Old Town Market are just a 10-minute drive away." }
+      ],
+      hostQuote: "Our goal is to provide a seamless, comfortable experience that feels both welcoming and secure. Whether you're a solo traveller, a couple on a getaway, or a group of friends — Mai Insta Homes is your sanctuary.",
+      hostName: "Amenye Ndiwo-Banda",
+      hostTitle: "Co-Founder, Mai Insta Homes",
+      hostImage: ""
+    };
+  });
+
+  const featureIcons = [
+    <Sun size={28} />, <Flame size={28} />, <Trees size={28} />,
+    <Car size={28} />, <Lock size={28} />, <ShoppingBag size={28} />
+  ];
+
+  useEffect(() => {
+    const fetchAboutInfo = async () => {
+      try {
+        const aboutDoc = await getDoc(doc(db, 'settings', 'about_info'));
+        if (aboutDoc.exists()) {
+          const data = aboutDoc.data();
+          setAboutInfo(data);
+          localStorage.setItem('mai_about_cache', JSON.stringify(data));
+        }
+      } catch (error) {
+        console.error("Error fetching about info: ", error);
+      }
+    };
+    fetchAboutInfo();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-brand-offwhite flex flex-col font-sans">
+    <div className="min-h-screen bg-brand-offwhite flex flex-col font-sans selection:bg-brand-gold selection:text-white">
       <Navbar />
-      
+
       <main className="flex-grow pt-28">
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
@@ -28,184 +72,165 @@ const About = () => {
           </div>
         </section>
 
-        {/* Story Section — Luxury Meets Convenience */}
-        <section className="py-24 px-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="inline-block px-4 py-1.5 bg-brand-gold/10 border border-brand-gold/20 rounded-full">
-                <span className="text-brand-gold font-bold text-xs uppercase tracking-widest">Our Essence</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-brand-teal leading-tight">
-                Luxury Meets <span className="text-brand-gold italic serif">Convenience</span>
-              </h2>
-              <p className="text-gray-600 leading-relaxed text-lg">
-                Welcome to MAI Instahomes — a cozy home away from home. This spacious four-bedroom house is located within a secure compound among other standalone homes in the up-and-coming middle-class neighbourhood of Airwing, Lilongwe. The property is enclosed with a full ClearVu electric fence and offers 24-hour solar power backup.
-              </p>
-              <p className="text-gray-600 leading-relaxed text-lg">
-                Guests can enjoy a fully equipped kitchen with a washing machine, a comfortable lounge with a shared TV, and high-speed WiFi — perfect for unwinding after a long day. Each of the four bedrooms features a king-size bed and a private bathroom with a hot shower, ensuring comfort and privacy throughout your stay.
-              </p>
-              <p className="text-gray-600 leading-relaxed text-lg">
-                Conveniently close to Lilongwe CBD and major shopping destinations such as Gateway Mall, with Old Town Market just 10 minutes away offering crafts, fresh produce, and a vibrant local atmosphere.
-              </p>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4">
-                <div className="flex flex-col items-center text-center bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-                  <Bed className="text-brand-teal mb-2" size={28} />
-                  <span className="text-2xl font-bold text-brand-teal">4</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">King Suites</span>
-                </div>
-                <div className="flex flex-col items-center text-center bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-                  <Bath className="text-brand-teal mb-2" size={28} />
-                  <span className="text-2xl font-bold text-brand-teal">4</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">En-suite Baths</span>
-                </div>
-                <div className="flex flex-col items-center text-center bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-                  <Zap className="text-brand-teal mb-2" size={28} />
-                  <span className="text-2xl font-bold text-brand-teal">24/7</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Solar Backup</span>
-                </div>
-                <div className="flex flex-col items-center text-center bg-white p-4 rounded-2xl shadow-sm border border-gray-50">
-                  <Wifi className="text-brand-teal mb-2" size={28} />
-                  <span className="text-2xl font-bold text-brand-teal">Fast</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">WiFi</span>
-                </div>
-              </div>
-            </div>
-            <div className="relative group">
-              <div className="absolute -inset-4 bg-brand-gold/20 rounded-3xl blur-2xl group-hover:bg-brand-gold/30 transition-all duration-500"></div>
-              <div className="relative overflow-hidden rounded-3xl aspect-[4/5] shadow-2xl">
+        {/* The Essence - Split Layout */}
+        <section className="py-20 px-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            {/* Left Image Stack */}
+            <div className="lg:col-span-5 relative">
+              <div className="absolute -inset-4 bg-gradient-to-tr from-brand-gold/20 to-brand-teal/10 rounded-[3rem] blur-2xl transform rotate-3"></div>
+              <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white aspect-[3/4]">
                 <img 
                   src="/hero4.png" 
-                  alt="Mai Insta Homes property" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  alt="Mai Insta Homes Interior" 
+                  className="w-full h-full object-cover"
                 />
               </div>
-              {/* Decorative badge */}
-              <div className="absolute -bottom-8 -left-8 bg-brand-teal p-8 rounded-2xl shadow-xl hidden md:block">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-brand-gold/20 p-3 rounded-full">
-                    <MapPin className="text-brand-gold" size={32} />
+              {/* Floating Stat Card */}
+              <div className="absolute -bottom-8 -right-8 bg-white p-6 rounded-2xl shadow-xl border border-gray-100 max-w-[200px] animate-bounce-slow hidden md:block">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="w-10 h-10 rounded-full bg-brand-teal/10 flex items-center justify-center">
+                    <ShieldCheck className="text-brand-teal" size={20} />
+                  </div>
+                  <span className="text-xs font-bold text-gray-400">100% SECURE</span>
+                </div>
+                <p className="font-bold text-brand-teal text-sm leading-tight">Enclosed with ClearVu fencing.</p>
+              </div>
+            </div>
+
+            {/* Right Text Content */}
+            <div className="lg:col-span-7 space-y-8 lg:pl-10">
+              <h2 className="text-4xl md:text-5xl font-bold text-brand-teal leading-[1.15]">
+                {aboutInfo.aboutTitle.includes(' ') ? (
+                  <>
+                    {aboutInfo.aboutTitle.split(' ').slice(0, -1).join(' ')}{' '}
+                    <span className="text-brand-gold italic serif">{aboutInfo.aboutTitle.split(' ').slice(-1)}</span>
+                  </>
+                ) : (
+                  aboutInfo.aboutTitle
+                )}
+              </h2>
+              
+              <div className="prose prose-lg text-gray-600 max-w-none space-y-4">
+                {(aboutInfo.aboutDescription || '').split('\n').map((paragraph, idx) => {
+                  if (!paragraph.trim()) return null;
+                  return (
+                    <p key={idx} className={`${idx === 0 ? 'text-xl font-medium text-gray-700' : ''} leading-relaxed`}>
+                      {paragraph}
+                    </p>
+                  );
+                })}
+              </div>
+
+              {/* Icon Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
+                {[
+                  { icon: <Bed size={24}/>, value: "4", label: "King Suites" },
+                  { icon: <Bath size={24}/>, value: "4", label: "En-suite Baths" },
+                  { icon: <Zap size={24}/>, value: "24/7", label: "Solar Backup" },
+                  { icon: <Wifi size={24}/>, value: "Fast", label: "Free WiFi" }
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-50 flex flex-col items-center justify-center text-center group hover:bg-brand-teal transition-colors duration-300">
+                    <div className="text-brand-teal group-hover:text-brand-gold mb-3 transition-colors">{stat.icon}</div>
+                    <span className="text-2xl font-black text-gray-800 group-hover:text-white leading-none mb-1 transition-colors">{stat.value}</span>
+                    <span className="text-[10px] font-bold text-gray-400 group-hover:text-white/80 uppercase tracking-widest">{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feature List Section */}
+        <section className="py-24 bg-white relative overflow-hidden">
+          {/* Decorative background vectors */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[100px] -translate-x-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-teal/5 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2"></div>
+          
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="text-center mb-20">
+              <h2 className="text-4xl md:text-5xl font-bold text-brand-teal mb-6">
+                {aboutInfo.peaceTitle || 'Designed For Your Peace of Mind'}
+              </h2>
+              <div className="w-20 h-1.5 bg-brand-gold mx-auto rounded-full"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16">
+              {(aboutInfo.features || []).map((feature, idx) => (
+                <div key={idx} className="flex gap-5 group">
+                  <div className="w-14 h-14 rounded-2xl bg-brand-offwhite border border-brand-teal/10 flex-shrink-0 flex items-center justify-center text-brand-teal group-hover:bg-brand-teal group-hover:text-brand-gold transition-colors duration-300 shadow-sm">
+                    {featureIcons[idx % featureIcons.length]}
                   </div>
                   <div>
-                    <p className="text-white font-bold text-lg leading-tight">Airwing</p>
-                    <p className="text-brand-gold font-bold text-xl leading-tight">Lilongwe, Malawi</p>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-brand-teal transition-colors">{feature.title}</h3>
+                    <p className="text-gray-600 leading-relaxed font-medium">{feature.text}</p>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* The Space & Guest Access */}
-        <section className="bg-white py-24 px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-              {/* The Space */}
-              <div className="space-y-6">
-                <div className="inline-block px-4 py-1.5 bg-brand-teal/5 border border-brand-teal/10 rounded-full">
-                  <span className="text-brand-teal font-bold text-xs uppercase tracking-widest">The Space</span>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-brand-teal leading-tight">
-                  Your Sanctuary in <span className="text-brand-gold italic">Lilongwe</span>
-                </h2>
-                <p className="text-gray-600 leading-relaxed text-lg">
-                  Our home is ideal for solo travellers, couples, and groups of friends seeking a welcoming and comfortable stay in the capital of the "Warm Heart of Africa." The compound provides both peace and security for a relaxing experience.
-                </p>
-                <p className="text-gray-600 leading-relaxed text-lg">
-                  Guests have exclusive access to the house and assigned room(s), depending on the number of people booked. All amenities within the house are available for guest use, in line with the number of occupants in the reservation.
-                </p>
-              </div>
-
-              {/* Things to Note */}
-              <div className="space-y-6">
-                <div className="inline-block px-4 py-1.5 bg-brand-gold/10 border border-brand-gold/20 rounded-full">
-                  <span className="text-brand-gold font-bold text-xs uppercase tracking-widest">Good to Know</span>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-brand-teal leading-tight">
-                  Things to Note
-                </h2>
-                <div className="space-y-4">
-                  {[
-                    { icon: <Sun size={22} />, text: "Solar backup ensures continuous power for lights, TV, and refrigerator." },
-                    { icon: <Flame size={22} />, text: "A gas cooker is available as an alternative when the main grid power is unavailable." },
-                    { icon: <Trees size={22} />, text: "Guests are welcome to relax on the patio or enjoy the outdoor garden space." },
-                    { icon: <Car size={22} />, text: "Free parking is available on the property." },
-                    { icon: <Lock size={22} />, text: "Fully enclosed with ClearVu electric fence for maximum security." },
-                    { icon: <ShoppingBag size={22} />, text: "A nearby supermarket is within easy reach; Gateway Mall and Old Town Market are minutes away." },
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-start space-x-4 bg-brand-offwhite p-4 rounded-xl hover:shadow-md transition-shadow group">
-                      <div className="text-brand-teal mt-0.5 shrink-0 group-hover:text-brand-gold transition-colors">
-                        {item.icon}
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed">{item.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Core Values */}
-        <section className="bg-brand-teal py-24 px-6 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Our Core Values</h2>
-              <p className="text-brand-gold font-medium text-lg italic">The pillars that define the Mai Insta Homes experience</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: <Heart size={32} />,
-                  title: "Warm Heart Hospitality",
-                  desc: "True to Malawi's spirit, we treat every guest as family — ensuring your needs are met with warmth, care, and professionalism."
-                },
-                {
-                  icon: <ShieldCheck size={32} />,
-                  title: "Security & Reliability",
-                  desc: "From our ClearVu electric fence to 24-hour solar backup, we never compromise on your safety or comfort."
-                },
-                {
-                  icon: <MapPin size={32} />,
-                  title: "Heart of Lilongwe",
-                  desc: "Proudly rooted in Airwing, minutes from Lilongwe CBD, Gateway Mall, and the vibrant Old Town Market."
-                }
-              ].map((value, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/10 p-8 rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-colors group">
-                  <div className="text-brand-gold mb-6 transition-transform group-hover:scale-110 duration-300">
-                    {value.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{value.title}</h3>
-                  <p className="text-gray-400 leading-relaxed text-sm">{value.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Host Section */}
-        <section className="py-24 px-6 max-w-4xl mx-auto text-center">
-          <div className="mb-8 relative inline-block">
-            <div className="w-32 h-32 rounded-full overflow-hidden mx-auto border-4 border-brand-gold shadow-xl">
+        {/* The Host Section */}
+        <section className="py-12 px-4 md:px-8 bg-white relative">
+          <div className="max-w-[1400px] w-full mx-auto rounded-[2rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-gray-100 flex flex-col lg:flex-row relative">
+            {/* Left side Image - Narrowed to 1/6 */}
+            <div className="lg:w-1/6 relative min-h-[200px] lg:min-h-0 overflow-hidden group border-r border-gray-50 bg-gray-50">
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300" 
-                alt="Host" 
-                className="w-full h-full object-cover"
+                src={aboutInfo.hostImage || ""} 
+                alt="Mai Insta Homes Host" 
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-[1.5s] ease-out opacity-100 group-hover:opacity-100"
               />
+              <div className="absolute inset-0 bg-brand-teal/10 mix-blend-multiply transition-opacity duration-500 group-hover:opacity-0"></div>
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-brand-gold p-2 rounded-full shadow-lg">
-              <User className="text-brand-teal" size={16} fill="currentColor" />
+
+            {/* Middle Text - Story */}
+            <div className="lg:flex-1 bg-gradient-to-br from-brand-offwhite to-white p-6 md:p-8 lg:p-10 relative flex flex-col justify-center">
+              {/* Giant decorative quote mark */}
+              <div className="absolute top-6 right-8 text-[100px] text-brand-teal/5 font-serif leading-none select-none pointer-events-none">
+                "
+              </div>
+              
+              <div className="relative z-10 max-w-2xl">
+                <div className="mb-4 inline-flex items-center text-brand-gold uppercase tracking-widest text-[10px] font-bold px-3 py-1.5 rounded-full border border-brand-gold/20 bg-brand-gold/5 backdrop-blur-sm">
+                  <Heart size={12} className="mr-2" /> Your Host
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-bold text-brand-teal mb-4 leading-tight">
+                  Passionate About <span className="italic text-brand-gold font-serif">Hospitality</span>
+                </h2>
+                
+                <blockquote className="text-base md:text-lg text-gray-700 italic leading-relaxed font-serif border-l-4 border-brand-gold pl-4 mb-6">
+                  "{aboutInfo.hostQuote}"
+                </blockquote>
+                
+                <div className="flex flex-col">
+                  <span className="text-brand-teal font-black text-lg tracking-tight uppercase">
+                    {aboutInfo.hostName || "Amenye Ndiwo-Banda"}
+                  </span>
+                  <span className="text-brand-gold text-[10px] font-bold uppercase tracking-[0.2em]">
+                    {aboutInfo.hostTitle || "Co-Founder, Mai Insta Homes"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side Features - Color Banner */}
+            <div className="lg:w-1/4 bg-brand-teal/[0.04] p-6 md:p-8 lg:p-10 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-brand-teal/10">
+              <ul className="flex flex-col space-y-6">
+                {['Local expertise & city recommendations', 'Dedicated 5-star cleanliness', 'Responsive 24/7 communication'].map((item, i) => (
+                  <li key={i} className="flex items-start text-gray-800 font-semibold text-sm group/item">
+                    <div className="bg-white shadow-sm p-1.5 rounded-lg border border-brand-teal/10 mr-4 mt-0.5 transition-all group-hover/item:border-brand-gold/50 group-hover/item:shadow-md">
+                      <CheckCircle2 size={16} className="text-brand-gold" />
+                    </div>
+                    <span className="leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-brand-teal mb-2">Meet Your Host</h2>
-          <p className="text-brand-gold font-bold uppercase tracking-widest text-xs mb-6">Passionate Hospitality Professional</p>
-          <p className="text-gray-600 italic text-lg leading-relaxed mb-8">
-            "My goal is to provide a seamless, comfortable experience that feels both welcoming and secure. Whether you're a solo traveller exploring Malawi, a couple on a getaway, or a group of friends — Mai Insta Homes is your sanctuary in the Warm Heart of Africa."
-          </p>
-          <div className="h-px w-20 bg-gray-200 mx-auto"></div>
         </section>
+
       </main>
 
       <Footer />

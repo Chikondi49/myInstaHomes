@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, Instagram, Facebook, Lock, ArrowRight, MapPin } from 'lucide-react';
+import { Phone, Mail, Instagram, Facebook, MapPin } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -85,17 +85,25 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Col 4: Admin */}
+
+        {/* Col 4: Newsletter */}
         <div>
-          <h4 className="text-brand-gold font-bold uppercase tracking-widest text-sm mb-6">Admin Login</h4>
-          <a href="#" className="inline-flex items-center space-x-2 text-sm text-gray-300 hover:text-white group">
-            <Lock size={14} className="text-brand-gold group-hover:scale-110 transition-transform" />
-            <span className="flex items-center">
-              Admin Login Portal
-              <ArrowRight size={14} className="ml-1 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-            </span>
-          </a>
+          <h4 className="text-brand-gold font-bold uppercase tracking-widest text-sm mb-6">Newsletter</h4>
+          <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+            Subscribe to get the latest updates, special offers, and news from Mai Insta Homes.
+          </p>
+          <div className="flex w-full">
+            <input 
+              type="email" 
+              placeholder="Your email" 
+              className="px-4 py-2 w-full text-sm rounded-l-lg outline-none text-gray-800"
+            />
+            <button className="bg-brand-gold text-white px-4 py-2 rounded-r-lg font-bold hover:bg-opacity-90 transition-opacity">
+              Join
+            </button>
+          </div>
         </div>
+
       </div>
 
       <div className="max-w-7xl mx-auto pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400">

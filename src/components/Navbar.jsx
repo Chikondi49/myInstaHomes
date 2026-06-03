@@ -20,7 +20,6 @@ const Navbar = () => {
     { name: 'Gallery', path: '/gallery' },
     { name: 'Pricing', path: '/#pricing' },
     { name: 'Blog', path: '/blog' },
-    { name: 'Admin Portal', path: '/admin' },
   ];
 
   return (
