@@ -1,13 +1,5 @@
 /* Custom styling for react-datepicker to look more standard/native while keeping custom features */
 
-.react-datepicker {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  font-family: inherit;
-  overflow: hidden;
-}
 
 .react-datepicker__header {
   background-color: white;
@@ -32,11 +24,8 @@
 .react-datepicker__day {
   color: #374151;
   font-weight: 500;
-  border-radius: 0.2rem; /* Square-ish look */
+  border-radius: 0.2rem;
   transition: all 0.2s;
-  width: 1.6rem;
-  line-height: 1.6rem;
-  margin: 0.1rem;
   font-size: 0.8rem;
 }
 
@@ -98,13 +87,45 @@
   width: 100%;
 }
 
-/* Force the dropdown calendar to span the full width of its parent */
+/* Force the dropdown calendar to perfectly fit its parent bounds */
 .react-datepicker-popper {
   width: 100% !important;
   z-index: 50 !important;
 }
 
+.react-datepicker {
+  width: 100%;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: inherit;
+  overflow: hidden;
+  font-size: 0.8rem;
+  display: flex !important;
+  flex-direction: column;
+}
+
 .react-datepicker__month-container {
   width: 100%;
   padding-bottom: 0.5rem;
+}
+
+.react-datepicker__day-names,
+.react-datepicker__week {
+  display: flex !important;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 0.2rem;
+}
+
+.react-datepicker__day,
+.react-datepicker__day-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  margin: 0.1rem 0 !important;
 }
