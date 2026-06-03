@@ -97,3 +97,14 @@
 .react-datepicker-wrapper {
   width: 100%;
 }
+
+/* Force the dropdown calendar to span the full width of its parent */
+.react-datepicker-popper {
+  width: 100% !important;
+  z-index: 50 !important;
+}
+
+.react-datepicker__month-container {
+  width: 100%;
+  padding-bottom: 0.5rem;
+}

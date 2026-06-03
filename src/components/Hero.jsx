@@ -7,6 +7,21 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker-custom.css";
 
+const CustomHeroDateInput = React.forwardRef(({ value, onClick, label }, ref) => (
+  <button 
+    type="button"
+    onClick={onClick} 
+    ref={ref} 
+    className="w-full h-full bg-white rounded-lg p-3 flex items-center space-x-3 group transition-all hover:ring-2 hover:ring-brand-gold text-left shrink-0"
+  >
+    <Calendar className="text-brand-teal" size={20} />
+    <div className="flex flex-col flex-1">
+      <span className="text-[10px] text-gray-500 uppercase font-bold cursor-pointer">{label}</span>
+      <span className="text-sm font-semibold text-gray-900">{value || "Select Date"}</span>
+    </div>
+  </button>
+));
+
 const Hero = () => {
   const [heroInfo, setHeroInfo] = useState({
     mainTitle: 'Your Comfort is Our Priority',
@@ -78,47 +93,39 @@ const Hero = () => {
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full max-w-5xl px-6 z-20">
         <div className="bg-brand-teal rounded-xl shadow-2xl p-2 md:p-4 flex flex-col md:flex-row items-stretch gap-4 border border-white/10">
            {/* Check-In */}
-          <div className="flex-1 bg-white rounded-lg p-3 flex items-center space-x-3 group transition-all hover:ring-2 hover:ring-brand-gold">
-            <Calendar className="text-brand-teal" size={20} />
-            <div className="flex flex-col flex-1">
-              <label className="text-[10px] text-gray-500 uppercase font-bold">Check-In</label>
-              <DatePicker
-                selected={dates.checkIn}
-                onChange={(date) => setDates({...dates, checkIn: date})}
-                startDate={dates.checkIn}
-                endDate={dates.checkOut}
-                selectsStart
-                minDate={new Date()}
-                excludeDateIntervals={blockedDates.map(range => ({
-                  start: new Date(range.start),
-                  end: new Date(range.end)
-                }))}
-                className="text-sm font-semibold outline-none w-full bg-transparent"
-                placeholderText="Select Date"
-              />
-            </div>
+          <div className="flex-1 flex">
+            <DatePicker
+              selected={dates.checkIn}
+              onChange={(date) => setDates({...dates, checkIn: date})}
+              startDate={dates.checkIn}
+              endDate={dates.checkOut}
+              selectsStart
+              minDate={new Date()}
+              excludeDateIntervals={blockedDates.map(range => ({
+                start: new Date(range.start),
+                end: new Date(range.end)
+              }))}
+              customInput={<CustomHeroDateInput label="Check-In" />}
+              wrapperClassName="w-full block"
+            />
           </div>
 
           {/* Check-Out */}
-          <div className="flex-1 bg-white rounded-lg p-3 flex items-center space-x-3 group transition-all hover:ring-2 hover:ring-brand-gold">
-            <Calendar className="text-brand-teal" size={20} />
-            <div className="flex flex-col flex-1">
-              <label className="text-[10px] text-gray-500 uppercase font-bold">Check-Out</label>
-              <DatePicker
-                selected={dates.checkOut}
-                onChange={(date) => setDates({...dates, checkOut: date})}
-                startDate={dates.checkIn}
-                endDate={dates.checkOut}
-                selectsEnd
-                minDate={dates.checkIn}
-                excludeDateIntervals={blockedDates.map(range => ({
-                  start: new Date(range.start),
-                  end: new Date(range.end)
-                }))}
-                className="text-sm font-semibold outline-none w-full bg-transparent"
-                placeholderText="Select Date"
-              />
-            </div>
+          <div className="flex-1 flex">
+            <DatePicker
+              selected={dates.checkOut}
+              onChange={(date) => setDates({...dates, checkOut: date})}
+              startDate={dates.checkIn}
+              endDate={dates.checkOut}
+              selectsEnd
+              minDate={dates.checkIn}
+              excludeDateIntervals={blockedDates.map(range => ({
+                start: new Date(range.start),
+                end: new Date(range.end)
+              }))}
+              customInput={<CustomHeroDateInput label="Check-Out" />}
+              wrapperClassName="w-full block"
+            />
           </div>
 
           {/* Guests */}
