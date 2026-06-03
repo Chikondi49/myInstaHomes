@@ -163,6 +163,9 @@ const Booking = () => {
                       <DatePicker
                         selected={formData.checkIn}
                         onChange={(date) => setFormData({...formData, checkIn: date})}
+                        startDate={formData.checkIn}
+                        endDate={formData.checkOut}
+                        selectsStart
                         minDate={new Date()}
                         excludeDateIntervals={blockedDates.map(range => ({
                           start: new Date(range.start),
@@ -177,6 +180,9 @@ const Booking = () => {
                       <DatePicker
                         selected={formData.checkOut}
                         onChange={(date) => setFormData({...formData, checkOut: date})}
+                        startDate={formData.checkIn}
+                        endDate={formData.checkOut}
+                        selectsEnd
                         minDate={formData.checkIn}
                         excludeDateIntervals={blockedDates.map(range => ({
                           start: new Date(range.start),

@@ -85,6 +85,9 @@ const Hero = () => {
               <DatePicker
                 selected={dates.checkIn}
                 onChange={(date) => setDates({...dates, checkIn: date})}
+                startDate={dates.checkIn}
+                endDate={dates.checkOut}
+                selectsStart
                 minDate={new Date()}
                 excludeDateIntervals={blockedDates.map(range => ({
                   start: new Date(range.start),
@@ -104,6 +107,9 @@ const Hero = () => {
               <DatePicker
                 selected={dates.checkOut}
                 onChange={(date) => setDates({...dates, checkOut: date})}
+                startDate={dates.checkIn}
+                endDate={dates.checkOut}
+                selectsEnd
                 minDate={dates.checkIn}
                 excludeDateIntervals={blockedDates.map(range => ({
                   start: new Date(range.start),
