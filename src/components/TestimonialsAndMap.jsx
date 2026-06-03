@@ -28,7 +28,7 @@ const TestimonialsAndMap = () => {
   return (
     <section className="flex flex-col lg:flex-row min-h-[400px]">
       {/* Left: Testimonials */}
-      <div className="bg-brand-gold w-full lg:w-1/2 p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
+      <div className="bg-brand-gold w-full lg:w-1/2 p-6 sm:p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
         <div className="relative z-10 w-full max-w-2xl mx-auto flex flex-col md:flex-row items-center gap-8">
           
           {founderInfo.imageUrl ? (

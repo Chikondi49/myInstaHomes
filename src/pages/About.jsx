@@ -54,7 +54,7 @@ const About = () => {
 
       <main className="flex-grow pt-28">
         {/* Hero Section */}
-        <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
+        <section className="relative h-[50vh] md:h-[60vh] flex items-center justify-center overflow-hidden">
           <div 
             className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
             style={{ backgroundImage: 'url("/hero3.png")' }}
@@ -73,8 +73,8 @@ const About = () => {
         </section>
 
         {/* The Essence - Split Layout */}
-        <section className="py-20 px-6 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        <section className="py-12 md:py-20 px-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-16 items-center">
             {/* Left Image Stack */}
             <div className="lg:col-span-5 relative">
               <div className="absolute -inset-4 bg-gradient-to-tr from-brand-gold/20 to-brand-teal/10 rounded-[3rem] blur-2xl transform rotate-3"></div>
@@ -141,7 +141,7 @@ const About = () => {
         </section>
 
         {/* Feature List Section */}
-        <section className="py-24 bg-white relative overflow-hidden">
+        <section className="py-16 md:py-24 bg-white relative overflow-hidden">
           {/* Decorative background vectors */}
           <div className="absolute top-0 left-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[100px] -translate-x-1/2"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-teal/5 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2"></div>

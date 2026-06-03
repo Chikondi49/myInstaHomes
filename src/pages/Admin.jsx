@@ -425,7 +425,36 @@ const Admin = () => {
               <h2 className="text-xl font-bold">Admin Portal</h2>
               <p className="text-sm opacity-80 mt-1">Manage Application</p>
             </div>
-            <div className="p-3 space-y-1">
+
+            {/* Mobile Nav */}
+            <div className="p-4 md:hidden border-b border-gray-100 bg-gray-50/50">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Select Module</label>
+              <select 
+                value={activeTab} 
+                onChange={(e) => setActiveTab(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-brand-teal font-medium text-gray-700 bg-white"
+              >
+                <optgroup label="Operations & Reservations">
+                  <option value="bookings">Bookings Desk</option>
+                  <option value="availability">Availability Calendar</option>
+                  <option value="pricing">Rates & Pricing</option>
+                </optgroup>
+                <optgroup label="Content & Branding">
+                  <option value="hero">Hero & Home</option>
+                  <option value="about">About Company</option>
+                  <option value="founder">Founder Profile</option>
+                  <option value="contact">Contact & Footer</option>
+                </optgroup>
+                <optgroup label="Properties & Media">
+                  <option value="featured">Featured Properties</option>
+                  <option value="gallery">Gallery Collection</option>
+                  <option value="blog">Blog Articles</option>
+                </optgroup>
+              </select>
+            </div>
+
+            {/* Desktop Nav */}
+            <div className="p-3 space-y-1 hidden md:block">
               <div className="px-4 py-2 mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Operations & Reservations</div>
               <button onClick={() => setActiveTab('bookings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'bookings' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><ClipboardList size={20} /> Bookings Desk</button>
               <button onClick={() => setActiveTab('availability')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'availability' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}><Calendar size={20} /> Availability Calendar</button>

@@ -60,9 +60,9 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-brand-offwhite flex flex-col font-sans">
       <Navbar />
-      <main className="flex-grow pt-28 pb-20">
+      <main className="flex-grow pt-24 md:pt-28 pb-12 md:pb-20">
         {/* Header */}
-        <div className="max-w-7xl mx-auto px-6 mb-12 text-center">
+        <div className="max-w-7xl mx-auto px-6 mb-8 md:mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-brand-teal mb-4">Blog</h1>
           <div className="h-1.5 w-16 bg-brand-gold mx-auto mb-6 rounded-full"></div>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">

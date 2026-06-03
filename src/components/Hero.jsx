@@ -46,7 +46,7 @@ const Hero = () => {
   const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   return (
-    <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center pt-16">
+    <section className="relative h-auto md:h-[90vh] min-h-[600px] flex items-center justify-center pt-32 pb-8 md:pt-16 md:pb-0">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img 
@@ -75,8 +75,8 @@ const Hero = () => {
       </div>
 
       {/* Floating Booking Widget */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full max-w-5xl px-6 z-20">
-        <div className="bg-brand-teal rounded-xl shadow-2xl p-2 md:p-4 flex flex-col md:flex-row items-stretch gap-4 border border-white/10">
+      <div className="relative md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2 md:translate-y-1/2 w-full max-w-5xl px-4 md:px-6 z-20 mt-8 md:mt-0 pb-12 md:pb-0 mx-auto">
+        <div className="bg-brand-teal rounded-xl shadow-2xl p-4 md:p-4 flex flex-col md:flex-row items-stretch gap-4 border border-white/10">
            {/* Check-In */}
           <div className="flex-1 bg-white rounded-lg p-3 flex items-center space-x-3 group transition-all hover:ring-2 hover:ring-brand-gold">
             <Calendar className="text-brand-teal" size={20} />

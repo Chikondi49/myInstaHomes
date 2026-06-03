@@ -12,8 +12,8 @@ const Amenities = () => {
   ];
 
   return (
-    <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto">
-      <div className="text-center mb-16">
+    <section className="pt-24 md:pt-40 pb-12 md:pb-20 px-6 max-w-7xl mx-auto">
+      <div className="text-center mb-10 md:mb-16">
         <h2 className="text-3xl md:text-4xl font-bold text-brand-teal uppercase tracking-tight max-w-2xl mx-auto leading-tight">
           LOOKING FOR A <span className="text-brand-gold">COMFORTABLE & AFFORDABLE</span> ACCOMMODATION?
         </h2>

@@ -35,8 +35,8 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-brand-teal text-white pt-20 pb-10 px-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+    <footer className="bg-brand-teal text-white pt-16 pb-8 md:pt-20 md:pb-10 px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16">
         {/* Col 1: Contact */}
         <div>
           <h4 className="text-brand-gold font-bold uppercase tracking-widest text-sm mb-6">Contact Info</h4>

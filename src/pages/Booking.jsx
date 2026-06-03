@@ -110,7 +110,7 @@ const Booking = () => {
     <div className="min-h-screen bg-brand-offwhite flex flex-col font-sans">
       <Navbar />
       
-      <main className="flex-grow pt-28 pb-20 px-6">
+      <main className="flex-grow pt-24 md:pt-28 pb-12 md:pb-20 px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-12">
@@ -122,18 +122,18 @@ const Booking = () => {
             {/* Left Column: Form */}
             <div className="flex-grow lg:w-2/3">
               {/* Stepper */}
-              <div className="flex items-center space-x-4 mb-8">
-                <div className={`flex items-center space-x-2 ${step >= 1 ? 'text-brand-teal' : 'text-gray-400'}`}>
+              <div className="flex items-center space-x-2 md:space-x-4 mb-8">
+                <div className={`flex items-center space-x-1 md:space-x-2 ${step >= 1 ? 'text-brand-teal' : 'text-gray-400'}`}>
                   <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold ${step >= 1 ? 'border-brand-teal bg-brand-teal text-white' : 'border-gray-200'}`}>1</span>
                   <span className="font-bold text-sm hidden sm:inline">Details</span>
                 </div>
-                <div className="w-12 h-0.5 bg-gray-200"></div>
-                <div className={`flex items-center space-x-2 ${step >= 2 ? 'text-brand-teal' : 'text-gray-400'}`}>
+                <div className="w-8 md:w-12 h-0.5 bg-gray-200"></div>
+                <div className={`flex items-center space-x-1 md:space-x-2 ${step >= 2 ? 'text-brand-teal' : 'text-gray-400'}`}>
                   <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold ${step >= 2 ? 'border-brand-teal bg-brand-teal text-white' : 'border-gray-200'}`}>2</span>
                   <span className="font-bold text-sm hidden sm:inline">Payment</span>
                 </div>
-                <div className="w-12 h-0.5 bg-gray-200"></div>
-                <div className={`flex items-center space-x-2 ${step >= 3 ? 'text-brand-teal' : 'text-gray-400'}`}>
+                <div className="w-8 md:w-12 h-0.5 bg-gray-200"></div>
+                <div className={`flex items-center space-x-1 md:space-x-2 ${step >= 3 ? 'text-brand-teal' : 'text-gray-400'}`}>
                   <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold ${step >= 3 ? 'border-brand-teal bg-brand-teal text-white' : 'border-gray-200'}`}>3</span>
                   <span className="font-bold text-sm hidden sm:inline">Confirm</span>
                 </div>
