@@ -152,6 +152,30 @@ const Admin = () => {
 
   // --- Handlers ---
   
+  const handleBookingStatusChange = async (bookingId, newStatus, firstName, lastName, checkIn, checkOut) => {
+    try {
+      await updateDoc(doc(db, 'bookings', bookingId), { status: newStatus });
+      setBookings(prev => prev.map(x => x.id === bookingId ? { ...x, status: newStatus } : x));
+
+      if (newStatus === 'confirmed') {
+        const newBlockedRange = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          start: checkIn,
+          end: checkOut,
+          label: `Booked online by ${firstName} ${lastName}`
+        };
+        const updatedBlockedDates = [...blockedDates, newBlockedRange];
+        setBlockedDates(updatedBlockedDates);
+        await setDoc(doc(db, 'settings', 'availability'), { blocked: updatedBlockedDates });
+        showMessage('success', 'Booking confirmed and dates blocked automatically.');
+      } else {
+        showMessage('success', `Booking marked as ${newStatus}.`);
+      }
+    } catch (err) {
+      console.error("Error updating booking status:", err);
+      showMessage('error', 'Failed to update booking status.');
+    }
+  };
   const handleUploadGallery = async (e) => {
     e.preventDefault();
     if (!file) return showMessage('error', 'Please select an image first.');
@@ -897,10 +921,7 @@ const Admin = () => {
                           <div className="flex items-center gap-3">
                             <select
                               value={b.status || 'pending'}
-                              onChange={async (e) => {
-                                await updateDoc(doc(db, 'bookings', b.id), { status: e.target.value });
-                                setBookings(prev => prev.map(x => x.id === b.id ? {...x, status: e.target.value} : x));
-                              }}
+                              onChange={(e) => handleBookingStatusChange(b.id, e.target.value, b.firstName, b.lastName, b.checkIn, b.checkOut)}
                               className={`text-xs font-bold px-3 py-1.5 rounded-full border outline-none cursor-pointer ${
                                 b.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' :
                                 b.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-200' :
