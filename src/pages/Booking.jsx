@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import { Calendar, Users, CreditCard, ChevronRight, Info, CheckCircle2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../datepicker-custom.css";
@@ -74,6 +74,35 @@ const Booking = () => {
 
   const totalPrice = (pricingInfo.nightlyRate * nights) + pricingInfo.serviceFee + pricingInfo.occupancyTaxes;
 
+  const [submitting, setSubmitting] = useState(false);
+  const [bookingId, setBookingId] = useState('');
+
+  const submitBooking = async () => {
+    setSubmitting(true);
+    try {
+      const bookingRef = await addDoc(collection(db, 'bookings'), {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        guests: formData.guests,
+        checkIn: formData.checkIn.toISOString(),
+        checkOut: formData.checkOut.toISOString(),
+        notes: formData.notes,
+        nights,
+        totalPrice,
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      });
+      setBookingId(bookingRef.id.slice(0, 8).toUpperCase());
+      nextStep();
+    } catch (err) {
+      console.error('Booking submission failed:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
@@ -122,6 +151,8 @@ const Booking = () => {
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">First Name</label>
                       <input 
                         type="text" 
+                     value={formData.firstName}
+                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                         className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all"
                         placeholder="John"
                       />
@@ -130,6 +161,8 @@ const Booking = () => {
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Last Name</label>
                       <input 
                         type="text" 
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                         className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all"
                         placeholder="Doe"
                       />
@@ -138,6 +171,8 @@ const Booking = () => {
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Email Address</label>
                       <input 
                         type="email" 
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
                         className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all"
                         placeholder="john@example.com"
                       />
@@ -146,8 +181,10 @@ const Booking = () => {
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Phone Number</label>
                       <input 
                         type="tel" 
+                        value={formData.phone}
+                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
                         className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all"
-                        placeholder="+263 77..."
+                        placeholder="+265 99..."
                       />
                     </div>
                   </div>
@@ -173,6 +210,7 @@ const Booking = () => {
                         }))}
                         className={`w-full bg-gray-50 border ${dateError ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-100'} rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all`}
                         placeholderText="Select Check-In"
+                        popperPlacement="bottom"
                       />
                     </div>
                     <div className="space-y-2">
@@ -190,15 +228,19 @@ const Booking = () => {
                         }))}
                         className={`w-full bg-gray-50 border ${dateError ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-100'} rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all`}
                         placeholderText="Select Check-Out"
+                        popperPlacement="bottom"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Total Guests</label>
-                      <select className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all appearance-none cursor-pointer">
-                        <option>1 Guest</option>
-                        <option selected>2 Guests</option>
-                        <option>3 Guests</option>
-                        <option>4 Guests</option>
+                      <select 
+                        value={formData.guests}
+                        onChange={(e) => setFormData({...formData, guests: e.target.value})}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all appearance-none cursor-pointer">
+                        <option value="1">1 Guest</option>
+                        <option value="2">2 Guests</option>
+                        <option value="3">3 Guests</option>
+                        <option value="4">4 Guests</option>
                       </select>
                     </div>
                   </div>
@@ -278,10 +320,11 @@ const Booking = () => {
                       Back
                     </button>
                     <button 
-                      onClick={nextStep}
-                      className="flex-[2] btn-teal py-4 text-lg font-bold"
+                      onClick={submitBooking}
+                      disabled={submitting}
+                      className="flex-[2] btn-teal py-4 text-lg font-bold disabled:opacity-60"
                     >
-                      Process Payment (${totalPrice.toFixed(2)})
+                      {submitting ? 'Processing...' : `Process Payment ($${totalPrice.toFixed(2)})`}
                     </button>
                   </div>
                 </div>
@@ -296,12 +339,24 @@ const Booking = () => {
                   <p className="text-gray-500 mb-10 max-w-sm mx-auto font-medium">
                     Your reservation at Mai Insta Homes has been successfully placed. We've sent a confirmation email to your address.
                   </p>
-                  <div className="bg-brand-offwhite p-6 rounded-2xl mb-10 text-left border border-gray-100">
-                    <div className="flex justify-between mb-4">
+                  <div className="bg-brand-offwhite p-6 rounded-2xl mb-10 text-left border border-gray-100 space-y-3">
+                    <div className="flex justify-between">
                       <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Booking ID</span>
-                      <span className="text-brand-teal font-bold font-mono">#MAI-8829-XL</span>
+                      <span className="text-brand-teal font-bold font-mono">#MAI-{bookingId}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Guest</span>
+                      <span className="text-brand-teal font-bold">{formData.firstName} {formData.lastName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Check-In</span>
+                      <span className="text-brand-teal font-bold">{formData.checkIn.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Check-Out</span>
+                      <span className="text-brand-teal font-bold">{formData.checkOut.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-gray-200 pt-3">
                       <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Total Paid</span>
                       <span className="text-brand-teal font-bold">${totalPrice.toFixed(2)}</span>
                     </div>

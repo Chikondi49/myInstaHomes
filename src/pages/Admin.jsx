@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { db, storage, auth } from '../firebase';
-import { collection, addDoc, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { Upload, Image as ImageIcon, Loader2, Info, LayoutTemplate, Phone, BookOpen, CreditCard, LogOut, FileText, Home, Calendar } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Info, LayoutTemplate, Phone, BookOpen, CreditCard, LogOut, FileText, Home, Calendar, ClipboardList, Search } from 'lucide-react';
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -89,6 +89,11 @@ const Admin = () => {
   const [blockedDates, setBlockedDates] = useState([]);
   const [newRange, setNewRange] = useState({ start: '', end: '', label: '' });
   const [savingAvailability, setSavingAvailability] = useState(false);
+
+  // Bookings State
+  const [bookings, setBookings] = useState([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [bookingSearch, setBookingSearch] = useState('');
   const [aboutInfo, setAboutInfo] = useState({
     aboutTitle: 'Luxury Meets Convenience',
     aboutDescription: 'Welcome to MAI Instahomes — your spacious four-bedroom retreat located within a secure compound of standalone homes in Lilongwe.\n\nGuests are treated to a fully equipped kitchen, a comfortable communal lounge, and 24-hour solar power backup. Each of our four elegant bedrooms features a king-size bed and a private en-suite bathroom with a hot shower, ensuring absolute privacy and comfort throughout your stay.',
@@ -126,6 +131,13 @@ const Admin = () => {
 
         const availabilityDoc = await getDoc(doc(db, 'settings', 'availability'));
         if (availabilityDoc.exists()) setBlockedDates(availabilityDoc.data().blocked || []);
+
+        // Fetch bookings
+        setLoadingBookings(true);
+        const bookingsQuery = query(collection(db, 'bookings'), orderBy('submittedAt', 'desc'));
+        const bookingsSnap = await getDocs(bookingsQuery);
+        setBookings(bookingsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setLoadingBookings(false);
       } catch (error) {
         console.error("Error fetching settings: ", error);
       }
@@ -402,6 +414,12 @@ const Admin = () => {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'availability' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 <Calendar size={20} /> Availability Manager
+              </button>
+              <button 
+                onClick={() => setActiveTab('bookings')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-colors ${activeTab === 'bookings' ? 'bg-brand-gold/10 text-brand-teal' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <ClipboardList size={20} /> Bookings Manager
               </button>
             </div>
             
@@ -827,6 +845,108 @@ const Admin = () => {
               <button onClick={handleSaveAvailability} disabled={savingAvailability} className="w-full bg-brand-gold text-white font-bold py-4 rounded-xl flex items-center justify-center disabled:opacity-70 shadow-lg">
                 {savingAvailability ? <><Loader2 className="animate-spin mr-2" /> Saving...</> : 'Apply Availability Changes'}
               </button>
+            </div>
+          )}
+
+          {/* TAB: BOOKINGS */}
+          {activeTab === 'bookings' && (
+            <div className="animate-in fade-in duration-300">
+              <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-brand-teal">Bookings Manager</h2>
+                  <p className="text-gray-500">All reservation requests submitted through the booking form.</p>
+                </div>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={bookingSearch}
+                    onChange={(e) => setBookingSearch(e.target.value)}
+                    className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-brand-teal w-64"
+                  />
+                </div>
+              </div>
+
+              {loadingBookings ? (
+                <div className="flex justify-center py-20"><Loader2 className="animate-spin text-brand-gold h-8 w-8" /></div>
+              ) : bookings.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">
+                  <ClipboardList size={48} className="mx-auto mb-4 opacity-30" />
+                  <p className="font-bold">No bookings yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookings
+                    .filter(b => {
+                      const q = bookingSearch.toLowerCase();
+                      return !q || `${b.firstName} ${b.lastName}`.toLowerCase().includes(q) || b.email?.toLowerCase().includes(q);
+                    })
+                    .map((b) => (
+                      <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-brand-teal/10 text-brand-teal flex items-center justify-center font-bold text-lg shrink-0">
+                              {b.firstName?.[0]}{b.lastName?.[0]}
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-800 text-lg">{b.firstName} {b.lastName}</p>
+                              <p className="text-sm text-gray-500">{b.email} · {b.phone}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <select
+                              value={b.status || 'pending'}
+                              onChange={async (e) => {
+                                await updateDoc(doc(db, 'bookings', b.id), { status: e.target.value });
+                                setBookings(prev => prev.map(x => x.id === b.id ? {...x, status: e.target.value} : x));
+                              }}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-full border outline-none cursor-pointer ${
+                                b.status === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' :
+                                b.status === 'cancelled' ? 'bg-red-50 text-red-600 border-red-200' :
+                                'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                            <span className="text-xs text-gray-400 font-mono">#{b.id.slice(0,8).toUpperCase()}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-gray-50 pt-4">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Check-In</p>
+                            <p className="font-semibold text-gray-700 text-sm">{new Date(b.checkIn).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Check-Out</p>
+                            <p className="font-semibold text-gray-700 text-sm">{new Date(b.checkOut).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Guests · Nights</p>
+                            <p className="font-semibold text-gray-700 text-sm">{b.guests} guests · {b.nights} nights</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total</p>
+                            <p className="font-bold text-brand-teal text-sm">${b.totalPrice?.toFixed(2)}</p>
+                          </div>
+                        </div>
+
+                        {b.notes && (
+                          <div className="mt-3 bg-gray-50 rounded-lg px-4 py-2 text-xs text-gray-500">
+                            <span className="font-bold text-gray-700">Notes: </span>{b.notes}
+                          </div>
+                        )}
+
+                        <p className="text-[10px] text-gray-300 mt-3">
+                          Submitted: {new Date(b.submittedAt).toLocaleString('en-GB')}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           )}
 
