@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Calendar, Users, CreditCard, ChevronRight, Info, CheckCircle2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../datepicker-custom.css";
 
 const Booking = () => {
   const [step, setStep] = useState(1);
-  const today = new Date().toISOString().split('T')[0];
-  const threeDaysLater = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const location = useLocation();
+  const initialCheckIn = location.state?.checkIn ? new Date(location.state.checkIn) : new Date();
+  const initialCheckOut = location.state?.checkOut ? new Date(location.state.checkOut) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -16,8 +21,8 @@ const Booking = () => {
     email: '',
     phone: '',
     guests: '2',
-    checkIn: today,
-    checkOut: threeDaysLater,
+    checkIn: initialCheckIn,
+    checkOut: initialCheckOut,
     notes: ''
   });
   
@@ -155,22 +160,30 @@ const Booking = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Check-In</label>
-                      <input 
-                        type="date" 
-                        value={formData.checkIn}
-                        onChange={(e) => setFormData({...formData, checkIn: e.target.value})}
-                        min={today}
+                      <DatePicker
+                        selected={formData.checkIn}
+                        onChange={(date) => setFormData({...formData, checkIn: date})}
+                        minDate={new Date()}
+                        excludeDateIntervals={blockedDates.map(range => ({
+                          start: new Date(range.start),
+                          end: new Date(range.end)
+                        }))}
                         className={`w-full bg-gray-50 border ${dateError ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-100'} rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all`}
+                        placeholderText="Select Check-In"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Check-Out</label>
-                      <input 
-                        type="date" 
-                        value={formData.checkOut}
-                        onChange={(e) => setFormData({...formData, checkOut: e.target.value})}
-                        min={formData.checkIn}
+                      <DatePicker
+                        selected={formData.checkOut}
+                        onChange={(date) => setFormData({...formData, checkOut: date})}
+                        minDate={formData.checkIn}
+                        excludeDateIntervals={blockedDates.map(range => ({
+                          start: new Date(range.start),
+                          end: new Date(range.end)
+                        }))}
                         className={`w-full bg-gray-50 border ${dateError ? 'border-red-300 ring-2 ring-red-100' : 'border-gray-100'} rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-gold transition-all`}
+                        placeholderText="Select Check-Out"
                       />
                     </div>
                     <div className="space-y-2">

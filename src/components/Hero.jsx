@@ -3,12 +3,21 @@ import { Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../datepicker-custom.css";
 
 const Hero = () => {
   const [heroInfo, setHeroInfo] = useState({
     mainTitle: 'Your Comfort is Our Priority',
     subtitle: 'BOOKING & MANAGEMENT PORTAL',
     description: ''
+  });
+
+  const [blockedDates, setBlockedDates] = useState([]);
+  const [dates, setDates] = useState({
+    checkIn: new Date(),
+    checkOut: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
   });
 
   useEffect(() => {
@@ -23,6 +32,9 @@ const Hero = () => {
             description: data.description || prev.description
           }));
         }
+
+        const availabilitySnap = await getDoc(doc(db, 'settings', 'availability'));
+        if (availabilitySnap.exists()) setBlockedDates(availabilitySnap.data().blocked || []);
       } catch (error) {
         console.error("Error fetching hero info: ", error);
       }
@@ -65,12 +77,22 @@ const Hero = () => {
       {/* Floating Booking Widget */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full max-w-5xl px-6 z-20">
         <div className="bg-brand-teal rounded-xl shadow-2xl p-2 md:p-4 flex flex-col md:flex-row items-stretch gap-4 border border-white/10">
-          {/* Check-In */}
+           {/* Check-In */}
           <div className="flex-1 bg-white rounded-lg p-3 flex items-center space-x-3 group transition-all hover:ring-2 hover:ring-brand-gold">
             <Calendar className="text-brand-teal" size={20} />
             <div className="flex flex-col flex-1">
               <label className="text-[10px] text-gray-500 uppercase font-bold">Check-In</label>
-              <input type="date" className="text-sm font-semibold outline-none w-full bg-transparent" defaultValue={today} />
+              <DatePicker
+                selected={dates.checkIn}
+                onChange={(date) => setDates({...dates, checkIn: date})}
+                minDate={new Date()}
+                excludeDateIntervals={blockedDates.map(range => ({
+                  start: new Date(range.start),
+                  end: new Date(range.end)
+                }))}
+                className="text-sm font-semibold outline-none w-full bg-transparent"
+                placeholderText="Select Date"
+              />
             </div>
           </div>
 
@@ -79,7 +101,17 @@ const Hero = () => {
             <Calendar className="text-brand-teal" size={20} />
             <div className="flex flex-col flex-1">
               <label className="text-[10px] text-gray-500 uppercase font-bold">Check-Out</label>
-              <input type="date" className="text-sm font-semibold outline-none w-full bg-transparent" defaultValue={threeDaysLater} />
+              <DatePicker
+                selected={dates.checkOut}
+                onChange={(date) => setDates({...dates, checkOut: date})}
+                minDate={dates.checkIn}
+                excludeDateIntervals={blockedDates.map(range => ({
+                  start: new Date(range.start),
+                  end: new Date(range.end)
+                }))}
+                className="text-sm font-semibold outline-none w-full bg-transparent"
+                placeholderText="Select Date"
+              />
             </div>
           </div>
 
@@ -98,7 +130,7 @@ const Hero = () => {
           </div>
 
           {/* CTA */}
-          <Link to="/book" className="bg-brand-gold text-brand-teal font-bold px-10 py-4 rounded-lg uppercase tracking-widest text-sm hover:scale-[1.02] transition-transform shadow-lg whitespace-nowrap text-center">
+          <Link to="/book" state={{ checkIn: dates.checkIn.toISOString(), checkOut: dates.checkOut.toISOString() }} className="bg-brand-gold text-brand-teal font-bold px-10 py-4 rounded-lg uppercase tracking-widest text-sm hover:scale-[1.02] transition-transform shadow-lg whitespace-nowrap text-center">
             Book Now
           </Link>
         </div>
